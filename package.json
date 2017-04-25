@@ -1,0 +1,43 @@
+{
+    "author": "Lucas Raposeiras",
+    "dependencies": {},
+    "keywords": [],
+    "name": "trenes-argentinos",
+    "pebble": {
+        "displayName": "Trenes Argentinos",
+        "enableMultiJS": true,
+        "messageKeys": {
+            "KEY_CONSULTA_ESTACION_PARTICULAR": 7,
+            "KEY_CONSULTA_RAMAL_COMPLETO": 0,
+            "KEY_RESPUESTA_HORARIO1_SENTIDO1": 1,
+            "KEY_RESPUESTA_HORARIO1_SENTIDO2": 4,
+            "KEY_RESPUESTA_HORARIO2_SENTIDO1": 2,
+            "KEY_RESPUESTA_HORARIO2_SENTIDO2": 5,
+            "KEY_RESPUESTA_HORARIO3_SENTIDO1": 3,
+            "KEY_RESPUESTA_HORARIO3_SENTIDO2": 6
+        },
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/icon",
+                    "menuIcon": true,
+                    "name": "icon_img",
+                    "targetPlatforms": null,
+                    "type": "png"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "b28ccb8a-f688-4818-be2a-8d4254133842",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
