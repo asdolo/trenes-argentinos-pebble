@@ -7,14 +7,15 @@
         "displayName": "Trenes Argentinos",
         "enableMultiJS": true,
         "messageKeys": {
-            "KEY_CONSULTA_ESTACION_PARTICULAR": 7,
-            "KEY_CONSULTA_RAMAL_COMPLETO": 0,
-            "KEY_RESPUESTA_HORARIO1_SENTIDO1": 1,
-            "KEY_RESPUESTA_HORARIO1_SENTIDO2": 4,
-            "KEY_RESPUESTA_HORARIO2_SENTIDO1": 2,
-            "KEY_RESPUESTA_HORARIO2_SENTIDO2": 5,
-            "KEY_RESPUESTA_HORARIO3_SENTIDO1": 3,
-            "KEY_RESPUESTA_HORARIO3_SENTIDO2": 6
+            "LineaRequest": 0,
+            "RamalRequest": 1,
+            "EstacionRequest": 2,
+            "Horario1Sentido1Response": 3,
+            "Horario2Sentido1Response": 4,
+            "Horario3Sentido1Response": 5,
+            "Horario1Sentido2Response": 6,
+            "Horario2Sentido2Response": 7,
+            "Horario3Sentido2Response": 8
         },
         "projectType": "native",
         "resources": {

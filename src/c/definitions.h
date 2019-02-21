@@ -1,394 +1,612 @@
 #include <pebble.h>
 
-enum {
-	KEY_CONSULTA_RAMAL_COMPLETO = 0,
-  KEY_RESPUESTA_HORARIO1_SENTIDO1 = 1,
-  KEY_RESPUESTA_HORARIO2_SENTIDO1 = 2,
-  KEY_RESPUESTA_HORARIO3_SENTIDO1 = 3,
-  KEY_RESPUESTA_HORARIO1_SENTIDO2 = 4,
-  KEY_RESPUESTA_HORARIO2_SENTIDO2 = 5,
-  KEY_RESPUESTA_HORARIO3_SENTIDO2 = 6,
-  KEY_CONSULTA_ESTACION_PARTICULAR = 7
+#define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
+#define LENGTH_NOMBRE_LINEA 20
+#define LENGTH_NOMBRE_RAMAL 32
+#define LENGTH_NOMBRE_ESTACION 32
+
+enum
+{
+	LineaRequest,
+	RamalRequest,
+	EstacionRequest,
+	Horario1Sentido1Response,
+	Horario2Sentido1Response,
+	Horario3Sentido1Response,
+	Horario1Sentido2Response,
+	Horario2Sentido2Response,
+	Horario3Sentido2Response
 };
 
+// Lineas de trenes
+#define CANT_LINEAS 6
 
+enum lineas
+{
+	LINEA_SARMIENTO,
+	LINEA_MITRE,
+	LINEA_ROCA,
+	LINEA_SAN_MARTIN,
+	LINEA_BELGRANO_SUR,
+	LINEA_TREN_DE_LA_COSTA
+};
 
-enum lineas {LINEA_SARMIENTO,
-             LINEA_MITRE,
-             LINEA_ROCA,
-             LINEA_BELGRANO_SUR,
-             LINEA_SAN_MARTIN,
-             TREN_DE_LA_COSTA};
+char nombres_lineas[CANT_LINEAS][LENGTH_NOMBRE_LINEA] = {
+	"Sarmiento",
+	"Mitre",
+	"Roca",
+	"San Martín",
+	"Belgrano Sur",
+	"Tren de la Costa"};
 
-enum ramales_lineas {LINEA_SARMIENTO_SARMIENTO,
-                     LINEA_MITRE_RETIRO_TIGRE,
-                     LINEA_MITRE_RETIRO_MITRE,
-                     LINEA_MITRE_RETIRO_SUAREZ,
-                     LINEA_ROCA_CONSTITUCION_LA_PLATA,
-                     LINEA_ROCA_CONSTITUCION_CLAYPOLE,
-                     LINEA_ROCA_CLAYPOLE_GUTIERREZ,
-                     LINEA_ROCA_CONSTITUCION_ALEJANDRO_KORN,
-                     LINEA_ROCA_CONSTITUCION_EZEIZA,
-                     LINEA_ROCA_TEMPERLEY_HAEDO,
-                     LINEA_ROCA_EZEIZA_CANUELAS,
-                     LINEA_BELGRANO_SUR_BUENOS_AIRES_BELGRANO,
-                     LINEA_BELGRANO_PTE_ALSINA_ALDO_BONZI,
-                     LINEA_BELGRANO_BUENOS_AIRES_GONZALEZ_CATAN,             
-                     LINEA_SAN_MARTIN_SAN_MARTIN,
-                     TREN_DE_LA_COSTA_TREN_DE_LA_COSTA};
+char *getNombreLinea(int lineaID)
+{
+	return nombres_lineas[lineaID];
+}
 
+// Ramales
 
-enum estaciones {ESTACION_SARMIENTO_ONCE,
-                 ESTACION_SARMIENTO_CABALLITO, // Linea Sarmiento
-                 ESTACION_SARMIENTO_FLORES,
-                 ESTACION_SARMIENTO_FLORESTA,
-                 ESTACION_SARMIENTO_VILLA_LURO,
-                 ESTACION_SARMIENTO_LNIERS,
-                 ESTACION_SARMIENTO_CIUDADELA,
-                 ESTACION_SARMIENTO_RAMOS_MEJIA,
-                 ESTACION_SARMIENTO_HAEDO,
-                 ESTACION_SARMIENTO_MORON,
-                 ESTACION_SARMIENTO_CASTELAR,
-                 ESTACION_SARMIENTO_ITUZAINGO,
-                 ESTACION_SARMIENTO_PADUA,
-                 ESTACION_SARMIENTO_MERLO,
-                 ESTACION_SARMIENTO_PASO_DEL_REY,
-                 ESTACION_SARMIENTO_MORENO,
-                 ESTACION_MITRE_TIGRE_RETIRO, // Linea Mitre Ramal Tigre
-                 ESTACION_MITRE_TIGRE_LISANDRO_DE_LA_TORRE,
-                 ESTACION_MITRE_TIGRE_BELGRANO_C,
-                 ESTACION_MITRE_TIGRE_NUNEZ,
-                 ESTACION_MITRE_TIGRE_RIVADAVIA,
-                 ESTACION_MITRE_TIGRE_VICENTE_LOPEZ,
-                 ESTACION_MITRE_TIGRE_OLIVOS,
-                 ESTACION_MITRE_TIGRE_LA_LUCILA,
-                 ESTACION_MITRE_TIGRE_MARTINEZ,
-                 ESTACION_MITRE_TIGRE_ACASSUSO,
-                 ESTACION_MITRE_TIGRE_SAN_ISIDRO_C,
-                 ESTACION_MITRE_TIGRE_BECCAR,
-                 ESTACION_MITRE_TIGRE_VICTORIA,
-                 ESTACION_MITRE_TIGRE_VIRREYES,
-                 ESTACION_MITRE_TIGRE_SAN_FERNANDO_C,
-                 ESTACION_MITRE_TIGRE_CARUPA,
-                 ESTACION_MITRE_TIGRE_TIGRE,
-                 ESTACION_MITRE_MITRE_RETIRO, // Linea Mitre Ramal Mitre
-                 ESTACION_MITRE_MITRE_3_DE_FEBRERO,
-                 ESTACION_MITRE_MITRE_MINISTRO_CARRANZA,
-                 ESTACION_MITRE_MITRE_COLEGIALES,
-                 ESTACION_MITRE_MITRE_BELGRANO_R,
-                 ESTACION_MITRE_MITRE_COGHLAN,
-                 ESTACION_MITRE_MITRE_SAAVEDRA,
-                 ESTACION_MITRE_MITRE_JUAN_B_JUSTO,
-                 ESTACION_MITRE_MITRE_FLORIDA,
-                 ESTACION_MITRE_MITRE_CETRANGOLO,
-                 ESTACION_MITRE_MITRE_MITRE,
-                 ESTACION_MITRE_SUAREZ_RETIRO, // Linea Mitre Ramal Suarez
-                 ESTACION_MITRE_SUAREZ_3_DE_FEBRERO,
-                 ESTACION_MITRE_SUAREZ_MINISTRO_CARRANZA,
-                 ESTACION_MITRE_SUAREZ_COLEGIALES,
-                 ESTACION_MITRE_SUAREZ_BELGRANO_R,
-                 ESTACION_MITRE_SUAREZ_DRAGO,
-                 ESTACION_MITRE_SUAREZ_URQUIZA,
-                 ESTACION_MITRE_SUAREZ_PUEYRREDON,
-                 ESTACION_MITRE_SUAREZ_MIGUELETE,
-                 ESTACION_MITRE_SUAREZ_SAN_MARTIN,
-                 ESTACION_MITRE_SUAREZ_SAN_ANDRES,
-                 ESTACION_MITRE_SUAREZ_MALAVER,
-                 ESTACION_MITRE_SUAREZ_VILLA_BALLESTER,
-                 ESTACION_MITRE_SUAREZ_CHILAVERT,
-                 ESTACION_MITRE_SUAREZ_SUAREZ,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_CONSTITUCION, // Linea Roca Ramal Constitucion - La Plata
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_SANTILLAN_Y_KOSTEKI,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_SARANDI,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_VILLA_DOMINICO,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_WILDER,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_DON_BOSCO,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_BERNAL,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_QUILMES,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_EZPELETA,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_BERAZATEGUI,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_PLATANOS,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_HUDSON,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_PEREYRA,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_VILLA_ELISA,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_CITY_BELL,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_GONNET,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_RINGUELET,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_TOLOSA,
-                 ESTACION_ROCA_CONSTITUCION_LA_PLATA_LA_PLATA,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_CONSTITUCION, // Linea Roca Ramal Constitucion - Claypole
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_HIPOLITO_YRIGOYEN,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_SANTILLAN_Y_KOSTEKI,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_GERLI,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_LANUS,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_REMEDIOS_DE_ESCALADA,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_BANDFIELD,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_LOMAS_DE_ZAMORA,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_TEMPERLEY,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_JOSE_MARMOL,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_RAFAEL_CALZADA,
-                 ESTACION_ROCA_CONSTITUCION_CLAYPOLE_CLAYPOLE,
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_CLAYPOLE, // Linea Roca Ramal Claypole - Gutierrez
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_DANTE_ARDIGO,
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_FLORENCIO_VARELA,
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_ZEBALLOS,
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_BOSQUES,
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_SANTA_SOFIA,
-                 ESTACION_ROCA_CLAYPOLE_GUTIERREZ_GUTIERREZ,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_CONSTITUCION, // Linea Roca Ramal Constitucion - Alejandro Korn
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_HIPOLITO_YRIGOYEN,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_SANTILLAN_Y_KOSTEKI,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_GERLI,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_LANUS,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_REMEDIOS_DE_ESCALADA,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_BANDFIELD,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_LOMAS_DE_ZAMORA,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_TEMPERLEY,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_ADROGUE,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_BURZACO,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_LONGCHAMPS,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_GLEW,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_GUERNICA,
-                 ESTACION_ROCA_CONSTITUCION_ALEJANDRO_KORN_ALEJANDRO_KORN,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_CONSTITUCION, // Linea Roca Ramal Constitucion - Ezeiza
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_HIPOLITO_YRIGOYEN,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA__SANTILLAN_Y_KOSTEKI,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA__GERLI,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_LANUS,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_REMEDIOS_DE_ESCALADA,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_BANDFIELD,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_LOMAS_DE_ZAMORA,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_TEMPERLEY,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_TURDERA,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_LLAVALLOL,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_LUIS_GUILLON,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_MONTE_GRANDE,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_EL_JAGUEL,
-                 ESTACION_ROCA_CONSTITUCION_EZEIZA_EZEIZA,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_TEMPERLEY, // Linea Roca Ramal Temperley - Haedo
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_HOSPITAL_ESPANOL,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_SANTA_CATALINA,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_JUAN_XXIII,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_KM_34,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_TURNER,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_AGUSTIN_DE_ELIA,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_TABLADA,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_SAN_JUSTO,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_INGENIERO_S_BRIAN,
-                 ESTACION_ROCA_TEMPERLEY_HAEDO_HAEDO,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_EZEIZA, // Linea Roca Ramal Ezeiza - Cañuelas
-                 ESTACION_ROCA_EZEIZA_CANUELAS_UNION_FERROVIARIA,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_TRISTAN_SUAREZ,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_CARLOS_SPEGAZZINI,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_MAXIMO_PAZ,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_VICENTE_CASARES,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_ALEJANDRO_PETION,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_APEADERO_KLOOSTERMAN,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_RICARDO_LEVENE,
-                 ESTACION_ROCA_EZEIZA_CANUELAS_CANUELAS,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_BUENOS_AIRES, // Linea Belgrano Sur Ramal Buenos Aires - M.C.G. Belgrano
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_DR_SAENZ,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_VILLA_SOLDATI,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_PRESIDENTE_ILLIA,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_VILLA_LUGANO,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_VILLA_MADERO,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_MARINOS_DEL_FOURNIER,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_TAPIALES,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_ALDO_BONZI,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_SANCHEZ_DE_MENDEVILLE,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_JOSE_INGENIEROS,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_JUSTO_VILLEGAS,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_ISIDRO_CASANOVA,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_RAFAEL_CASTILLO,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_MERLO_GOMEZ,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_LIBERTAD,
-                 ESTACION_BELGRANO_SUR_BUENOS_AIRES_BELGRANO_MARINOS_BELGRANO,
-                };
-                 
-                 
-                 
-                 
-//titulos de lineas
-char lineas_trenes[6][20] = {"Sarmiento",
-                             "Mitre",
-                             "Roca",
-                             "Belgrano Sur",
-                             "San Martín",
-                             "Tren de la Costa"};
+// Ramales de la linea Sarmiento
+#define CANT_RAMALES_LINEA_SARMIENTO 1
 
-//titulos de ramales...
-char ramales_mitre[3][32] = {"Retiro - Tigre",
-                             "Retiro - Mitre",
-                             "Retiro - J.L. Suárez"};
+enum ramales_linea_sarmiento
+{
+	LINEA_SARMIENTO_RAMAL_ONCE_MORENO
+};
 
-char ramales_roca[8][32] = {"Constitución - La Plata",
-                            "Constitución - Claypole",
-                            "Retiro - J.L. Suárez",
-                            "Claypole - Gutierrez",
-                            "Constitución - Alejandro Korn",
-                            "Constitución - Ezeiza",
-                            "Temperley - Haedo",
-                            "Ezeiza - Cañuelas"};
+char nombres_ramales_linea_sarmiento[CANT_RAMALES_LINEA_SARMIENTO][LENGTH_NOMBRE_RAMAL] = {
+	"Once - Moreno"};
 
-char ramales_belgrano_sur[3][32] = {"Buenos Aires - M.C.G. Belgrano",
-                                    "Pte Alsina - Aldo Bonzi",
-                                    "Buenos Aires - Gonzalez Catán"};
+// Ramales de la linea Mitre
+#define CANT_RAMALES_LINEA_MITRE 3
 
-//titulos de estaciones
-char estaciones_sarmiento[16][32] = {"Once",
-                                     "Caballito",
-                                     "Flores",
-                                     "Floresta",
-                                     "Villa Luro",
-                                     "Liniers",
-                                     "Ciudadela",
-                                     "Ramos Mejía",
-                                     "Haedo",
-                                     "Morón",
-                                     "Castelar",
-                                     "Ituzaingó",
-                                     "S.A. de Padua",
-                                     "Merlo",
-                                     "Paso del Rey",
-                                     "Moreno"
-                                    };
+enum ramales_linea_mitre
+{
+	LINEA_MITRE_RAMAL_RETIRO_TIGRE,
+	LINEA_MITRE_RAMAL_RETIRO_MITRE,
+	LINEA_MITRE_RAMAL_RETIRO_J_L_SUAREZ
+};
 
-char estaciones_mitre_retiro_tigre[17][32] = {"Retiro",
-                                              "Lisandro de la Torre",
-                                              "Belgrano C",
-                                              "Núñez",
-                                              "Rivadavia",
-                                              "Vicente López",
-                                              "Olivos",
-                                              "La Lucila",
-                                              "Martínez",
-                                              "Acassuso",
-                                              "San Isidro C",
-                                              "Béccar",
-                                              "Victoria",
-                                              "Virreyes",
-                                              "San Fernando C",
-                                              "Carupá",
-                                              "Tigre"};
+char nombres_ramales_linea_mitre[CANT_RAMALES_LINEA_MITRE][LENGTH_NOMBRE_RAMAL] = {
+	"Retiro - Tigre",
+	"Retiro - Mitre",
+	"Retiro - J.L. Suárez"};
 
-char estaciones_mitre_retiro_mitre[11][32] = {"Retiro",
-                                              "3 de Febrero",
-                                              "Ministro Carranza",
-                                              "Colegiales",
-                                              "Belgrano R",
-                                              "Coghlan",
-                                              "Saavedra",
-                                              "Juan B. Justo",
-                                              "Florida",
-                                              "Dr. Cetrángolo",
-                                              "Mitre"};
+// Ramales de la linea Roca
+#define CANT_RAMALES_LINEA_ROCA 8
 
-char estaciones_mitre_retiro_suarez[15][32] = {"Retiro",
-                                               "3 de Febrero",
-                                               "Ministro Carranza",
-                                               "Colegiales",
-                                               "Belgrano R",
-                                               "L.M. Drago",
-                                               "Urquiza",
-                                               "Pueyrredón",
-                                               "Miguelete",
-                                               "San Martín",
-                                               "San Andrés",
-                                               "Malaver",
-                                               "Villa Ballester",
-                                               "Chilavert",
-                                               "J.L. Suárez"};
+enum ramales_linea_roca
+{
+	LINEA_ROCA_RAMAL_CONSTITUCION_LA_PLATA,
+	LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_Q,
+	LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_T,
+	LINEA_ROCA_RAMAL_CONSTITUCION_ALEJANDRO_KORN,
+	LINEA_ROCA_RAMAL_CONSTITUCION_EZEIZA,
+	LINEA_ROCA_RAMAL_EZEIZA_CANUELAS,
+	LINEA_ROCA_RAMAL_LA_PLATA_POLICLINICO,
+	LINEA_ROCA_RAMAL_CONSTITUCION_CANUELAS
+};
 
-//TODO: PASAR ESTOS A ARREGLO:
-char estacionConstitucion[32] = "Constitución";
-char estacionSantillanYKosteki[32] = "Santillán y Kosteki";
-char estacionSarandi[32] = "Sarandí";
-char estacionVillaDominico[32] = "Villa Domínico";
-char estacionWilde[32] = "Wilde";
-char estacionDonBosco[32] = "Don Bosco";
-char estacionBernal[32] = "Bernal";
-char estacionQuilmes[32] = "Quilmes";
-char estacionEzpeleta[32] = "Ezpeleta";
-char estacionBerazategui[32] = "Berazategui";
-char estacionPlatanos[32] = "Plátanos";
-char estacionHudson[32] = "Hudson";
-char estacionPereyra[32] = "Pereyra";
-char estacionVillaElisa[32] = "Villa Elisa";
-char estacionCityBell[32] = "City Bell";
-char estacionGonnet[32] = "Gonnet";
-char estacionRinguelet[32] = "Ringuelet";
-char estacionTolosa[32] = "Tolosa";
-char estacionLaPlata[32] = "La Plata";
+char nombres_ramales_linea_roca[CANT_RAMALES_LINEA_ROCA][LENGTH_NOMBRE_RAMAL] = {
+	"Constitución - La Plata",
+	"Constitución - Bosques (Q)",
+	"Constitución - Bosques (T)",
+	"Constitución - Alejandro Korn",
+	"Constitución - Ezeiza",
+	"Ezeiza - Cañuelas",
+	"La plata - Policlínico",
+	"Constitución - Cañuelas"};
 
-char estacionHipolitoYrigoyen[32] = "Hipólito Yrigoyen";
-char estacionGerli[32] = "Gerli";
-char estacionLanus[32] = "Lanús";
-char estacionRemediosDeEscalada[32] = "Remedios de Escalada";
-char estacionBandfield[32] = "Bandfield";
-char estacionLomasDeZamora[32] = "LomasDeZamora";
-char estacionTemperley[32] = "Temperley";
-char estacionJoseMarmol[32] = "José mármol";
-char estacionRafaelCalzada[32] = "Rafael Calzada";
-char estacionClaypole[32] = "Claypole";
+// Ramales de la linea San Martin
+#define CANT_RAMALES_LINEA_SAN_MARTIN 2
 
-char estacionDanteArdigo[32] = "Dante Ardigó";
-char estacionFlorencioVarela[32] = "Florencio Varela";
-char estacionZeballos[32] = "Zeballos";
-char estacionBosques[32] = "Bosques";
-char estacionSantaSofia[32] = "Santa Sofía";
-char estacionGutierrez[32] = "Gutiérrez";
+enum ramales_linea_san_martin
+{
+	LINEA_SAN_MARTIN_RAMAL_RETIRO_PILAR,
+	LINEA_SAN_MARTIN_RAMAL_PILAR_CABRED
+};
 
-char estacionAdrogue[32] = "Adrogué";
-char estacionBurzaco[32] = "Burzaco";
-char estacionLongchamps[32] = "Longchamps";
-char estacionGlew[32] = "Glew";
-char estacionGuernica[32] = "Guernica";
-char estacionAlejandroKorn[32] = "Alejandro Korn";
+char nombres_ramales_linea_san_martin[CANT_RAMALES_LINEA_SAN_MARTIN][LENGTH_NOMBRE_RAMAL] = {
+	"Retiro - Pilar",
+	"Pilar - Cabred"};
 
-char estacionTurdera[32] = "Turdera";
-char estacionLlavallol[32] = "Llavallol";
-char estacionLuisGuillon[32] = "Luis Guillón";
-char estacionMonteGrande[32] = "Monte Grande";
-char estacionElJaguel[32] = "El Jagüel";
-char estacionEzeiza[32] = "Ezeiza";
+// Ramales de la linea Belgrano Sur
+#define CANT_RAMALES_LINEA_BELGRANO_SUR 3
 
-char estacionHospitalEspanol[32] = "Hospital Español";
-char estacionSantaCatalina[32] = "Santa Catalina";
-char estacionJuanXXIII[32] = "Juan XXIII";
-char estacionKM34[32] = "KM 34";
-char estacionPTurner[32] = "P. Turner";
-char estacionAgustinDeElia[32] = "Agustín de Elía";
-char estacionTablada[32] = "Tablada";
-char estacionSanJusto[32] = "San Justo";
-char estacionIngenieroSBrian[32] = "Ingeniero S. Brian";
+enum ramales_linea_belgrano_sur
+{
+	LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_M_C_G_BELGRANO,
+	LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_GONZALEZ_CATAN,
+	LINEA_BELGRANO_SUR_RAMAL_APEADERO_KM_12_LIBERTAD
+};
 
-char estacionUnionFerroviaria[32] = "Unión Ferroviaria";
-char estacionTristanSuarez[32] = "Tristán Suárez";
-char estacionCarlosSpegazzini[32] = "Carlos Spegazzini";
-char estacionMaximoPaz[32] = "Máximo Paz";
-char estacionVicenteCasares[32] = "Vicente Casares";
-char estacionAlejandroPetion[32] = "Alejandro Petión";
-char estacionApeaderoKloosterman[32] = "Apeadero Kloosterman";
-char estacionRicardoLavene[32] = "Ricardo Lavene";
-char estacionCauelas[32] = "Cañuelas";
+char nombres_ramales_linea_belgrano_sur[CANT_RAMALES_LINEA_BELGRANO_SUR][LENGTH_NOMBRE_RAMAL] = {
+	"Buenos Aires - M.C.G. Belgrano",
+	"Buenos Aires - Gonzalez Catán",
+	"Apeadero Km 12 - Libertad"};
 
-char estacionBuenosAires[32] = "Buenos Aires";
-char estacionDrSaenz[32] = "Dr. Sáenz";
-char estacionVillaSoldati[32] = "Villa Soldati";
-char estacionPresidenteIllia[32] = "Presidente Illia";
-char estacionVillaLugano[32] = "Villa Lugano";
-char estacionVillaMadero[32] = "Villa Madero";
-char estacionMarinosDelFournier[32] = "Marinos del Fournier";
-char estacionTapiales[32] = "Tapiales";
-char estacionAldoBonzi[32] = "Aldo Bonzi";
-char estacionSanchezDeMendeville[32] = "Sánchez de Mendeville";
-char estacionJoseIngenieros[32] = "José Ingenieros";
-char estacionJustoVillegas[32] = "Justo Villegas";
-char estacionIsidroCasanova[32] = "Isidro Casanova";
-char estacionRafaelCastillo[32] = "Rafael Castillo";
-char estacionMerloGomez[32] = "Merlo Gómez";
-char estacionLibertad[32] = "Libertad";
-char estacionMarinosCGBelgrano[32] = "Marinos C. G. Belgrano";
-                 
-                 
-                 
+// Ramales de la linea Tren de La Costa
+#define CANT_RAMALES_LINEA_TREN_DE_LA_COSTA 1
+
+enum ramales_linea_tren_de_la_costa
+{
+	LINEA_TREN_DE_LA_COSTA_RAMAL_MAIPU_DELTA
+};
+
+char nombres_ramales_linea_tren_de_la_costa[CANT_RAMALES_LINEA_TREN_DE_LA_COSTA][LENGTH_NOMBRE_RAMAL] = {
+	"Maipú - Delta"};
+
+int cant_ramales[CANT_LINEAS] = {
+	CANT_RAMALES_LINEA_SARMIENTO,
+	CANT_RAMALES_LINEA_MITRE,
+	CANT_RAMALES_LINEA_ROCA,
+	CANT_RAMALES_LINEA_SAN_MARTIN,
+	CANT_RAMALES_LINEA_BELGRANO_SUR,
+	CANT_RAMALES_LINEA_TREN_DE_LA_COSTA};
+
+char *getNombreRamal(int lineaID, int ramalID)
+{
+	switch (lineaID)
+	{
+	case LINEA_SARMIENTO:
+		return nombres_ramales_linea_sarmiento[ramalID];
+	case LINEA_MITRE:
+		return nombres_ramales_linea_mitre[ramalID];
+	case LINEA_ROCA:
+		return nombres_ramales_linea_roca[ramalID];
+	case LINEA_SAN_MARTIN:
+		return nombres_ramales_linea_san_martin[ramalID];
+	case LINEA_BELGRANO_SUR:
+		return nombres_ramales_linea_belgrano_sur[ramalID];
+	case LINEA_TREN_DE_LA_COSTA:
+		return nombres_ramales_linea_tren_de_la_costa[ramalID];
+	}
+
+	return NULL;
+}
+
+// Estaciones
+
+// Estaciones Linea Sarmiento/Ramal Once - Moreno
+#define CANT_ESTACIONES_LINEA_SARMIENTO_RAMAL_ONCE_MORENO 16
+
+char nombres_estaciones_linea_sarmiento_ramal_once_moreno[CANT_ESTACIONES_LINEA_SARMIENTO_RAMAL_ONCE_MORENO][LENGTH_NOMBRE_ESTACION] = {
+	"Once",
+	"Caballito",
+	"Flores",
+	"Floresta",
+	"Villa Luro",
+	"Liniers",
+	"Ciudadela",
+	"Ramos Mejía",
+	"Haedo",
+	"Morón",
+	"Castelar",
+	"Ituzaingó",
+	"S.A. de Padua",
+	"Merlo",
+	"Paso del Rey",
+	"Moreno"};
+
+// Estaciones Linea Mitre/Ramal Retiro - Tigre
+#define CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_TIGRE 17
+
+char nombres_estaciones_linea_mitre_ramal_retiro_tigre[CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_TIGRE][LENGTH_NOMBRE_ESTACION] = {
+	"Retiro",
+	"L. de la Torre",
+	"Belgrano C",
+	"Nuñez",
+	"Rivadavia",
+	"Vicente López",
+	"Olivos",
+	"La Lucila",
+	"Martínez",
+	"Acassuso",
+	"San Isidro C",
+	"Béccar",
+	"Victoria",
+	"Virreyes",
+	"San Fernando C",
+	"Carupá",
+	"Tigre"};
+
+// Estaciones Linea Mitre/Ramal Retiro - Mitre
+#define CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_MITRE 11
+
+char nombres_estaciones_linea_mitre_ramal_retiro_mitre[CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_MITRE][LENGTH_NOMBRE_ESTACION] = {
+	"Retiro",
+	"3 de Febrero",
+	"Ministro Carranza",
+	"Colegiales",
+	"Belgrano R",
+	"Coghlan",
+	"Saavedra",
+	"Juan B. Justo",
+	"Florida",
+	"Dr. Cetrángolo",
+	"Mitre"};
+
+// Estaciones Linea Mitre/Ramal Retiro - J.L. Suarez
+#define CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_J_L_SUAREZ 15
+
+char nombres_estaciones_linea_mitre_ramal_retiro_j_l_suarez[CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_J_L_SUAREZ][LENGTH_NOMBRE_ESTACION] = {
+	"Retiro",
+	"3 de Febrero",
+	"Ministro Carranza",
+	"Colegiales",
+	"Belgrano R",
+	"L.M. Drago",
+	"Urquiza",
+	"Pueyrredón",
+	"Miguelete",
+	"San Martín",
+	"San Andrés",
+	"Malaver",
+	"Villa Ballester",
+	"Chilavert",
+	"J.L. Suárez"};
+
+// Estaciones Linea Roca/Ramal Constitución - La Plata
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_LA_PLATA 19
+
+char nombres_estaciones_linea_roca_ramal_constitucion_la_plata[CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_LA_PLATA][LENGTH_NOMBRE_ESTACION] = {
+	"Constitución",
+	"Santillán y Kosteki",
+	"Sarandí",
+	"Villa Domínico",
+	"Wilde",
+	"Don Bosco",
+	"Bernal",
+	"Quilmes",
+	"Ezpeleta",
+	"Berazategui",
+	"Plátanos",
+	"Hudson",
+	"Pereyra",
+	"Villa Elisa",
+	"City Bell",
+	"Gonnet",
+	"Ringuelet",
+	"Tolosa",
+	"La Plata"};
+
+// Estaciones Linea Roca/Ramal Constitución - Bosques (Q)
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_Q 14
+
+char nombres_estaciones_linea_roca_ramal_constitucion_bosques_q[CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_Q][LENGTH_NOMBRE_ESTACION] = {
+	"Constitución",
+	"Santillán y Kosteki",
+	"Sarandí",
+	"Villa Domínico",
+	"Wilde",
+	"Don Bosco",
+	"Bernal",
+	"Quilmes",
+	"Ezpeleta",
+	"Berazategui",
+	"Villa España",
+	"Ranelagh",
+	"Sourigues",
+	"Bosques"};
+
+// Estaciones Linea Roca/Ramal Constitución - Bosques (T)
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_T 16
+
+char nombres_estaciones_linea_roca_ramal_constitucion_bosques_t[CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_T][LENGTH_NOMBRE_ESTACION] = {
+	"Constitución",
+	"Hipólito Yrigoyen",
+	"Santillán y Kosteki",
+	"Gerli",
+	"Lanús",
+	"Remedios de Escalada",
+	"Banfield",
+	"Lomas de Zamora",
+	"Temperley",
+	"José Mármol",
+	"Rafael Calzada",
+	"Claypole",
+	"Dante Ardigó",
+	"Florencio Varela",
+	"Zeballos",
+	"Bosques"};
+
+// Estaciones Linea Roca/Ramal Constitución - Alejandro Korn
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_ALEJANDRO_KORN 15
+
+char nombres_estaciones_linea_roca_ramal_constitucion_alejandro_korn[CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_ALEJANDRO_KORN][LENGTH_NOMBRE_ESTACION] = {
+	"Constitución",
+	"Hipólito Yrigoyen",
+	"Santillán y Kosteki",
+	"Gerli",
+	"Lanús",
+	"Remedios de Escalada",
+	"Banfield",
+	"Lomas de Zamora",
+	"Temperley",
+	"Adrogué",
+	"Burzaco",
+	"Longchamps",
+	"Glew",
+	"Guernica",
+	"Alejandro Korn"};
+
+// Estaciones Linea Roca/Ramal Constitución - Ezeiza
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_EZEIZA 15
+
+char nombres_estaciones_linea_roca_ramal_constitucion_ezeiza[CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_EZEIZA][LENGTH_NOMBRE_ESTACION] = {
+	"Constitución",
+	"Hipólito Yrigoyen",
+	"Santillán y Kosteki",
+	"Gerli",
+	"Lanús",
+	"Remedios de Escalada",
+	"Banfield",
+	"Lomas de Zamora",
+	"Temperley",
+	"Turdera",
+	"Llavallol",
+	"Luis Guillón",
+	"Monte Grande",
+	"El Jagüel",
+	"Ezeiza"};
+
+// Estaciones Linea Roca/Ramal Ezeiza - Cañuelas
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_EZEIZA_CANUELAS 10
+
+char nombres_estaciones_linea_roca_ramal_ezeiza_canuelas[CANT_ESTACIONES_LINEA_ROCA_RAMAL_EZEIZA_CANUELAS][LENGTH_NOMBRE_ESTACION] = {
+	"Ezeiza",
+	"Unión Ferroviaria",
+	"Tristán Suárez",
+	"Carlos Spegazzini",
+	"Máximo Paz",
+	"Vicente Casares",
+	"Alejandro Petión",
+	"Apeadero Kloosterman",
+	"Ricardo Levene",
+	"Cañuelas"};
+
+// Estaciones Linea Roca/Ramal La Plata - Policlínico
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_LA_PLATA_POLICLINICO 7
+
+char nombres_estaciones_linea_roca_ramal_la_plata_policlinico[CANT_ESTACIONES_LINEA_ROCA_RAMAL_LA_PLATA_POLICLINICO][LENGTH_NOMBRE_ESTACION] = {
+	"La Plata",
+	"Arquitectura",
+	"Informática",
+	"Medicina",
+	"Periodismo",
+	"Diagonal 73",
+	"Policlínico"};
+
+// Estaciones Linea Roca/Ramal Constitución - Cañuelas
+#define CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_CANUELAS 24
+
+char nombres_estaciones_linea_roca_ramal_constitucion_canuelas[CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_CANUELAS][LENGTH_NOMBRE_ESTACION] = {
+	"Constitución",
+	"Hipólito Yrigoyen",
+	"Santillán y Kosteki",
+	"Gerli",
+	"Lanús",
+	"Remedios de Escalada",
+	"Banfield",
+	"Lomas de Zamora",
+	"Temperley",
+	"Turdera",
+	"Llavallol",
+	"Luis Guillón",
+	"Monte Grande",
+	"El Jagüel",
+	"Ezeiza",
+	"Unión Ferroviaria",
+	"Tristán Suárez",
+	"Carlos Spegazzini",
+	"Máximo Paz",
+	"Vicente Casares",
+	"Alejandro Petión",
+	"Apeadero Kloosterman",
+	"Ricardo Levene",
+	"Cañuelas"};
+
+// Estaciones Linea San Martín/Ramal Retiro - Pilar
+#define CANT_ESTACIONES_LINEA_SAN_MARTIN_RAMAL_RETIRO_PILAR 16
+
+char nombres_estaciones_linea_san_martin_ramal_retiro_pilar[CANT_ESTACIONES_LINEA_SAN_MARTIN_RAMAL_RETIRO_PILAR][LENGTH_NOMBRE_ESTACION] = {
+	"Villa del Parque",
+	"Devoto",
+	"Saenz Peña",
+	"Santos Lugares",
+	"Caseros",
+	"El Palomar",
+	"Hurlingham",
+	"William Morris",
+	"Bella Vista",
+	"Muñiz",
+	"San Miguel",
+	"José C Paz",
+	"Sol y Verde",
+	"Derqui",
+	"Villa Astolfi",
+	"Pilar"};
+
+// Estaciones Linea San Martín/Ramal Pilar - Cabred
+#define CANT_ESTACIONES_LINEA_SAN_MARTIN_RAMAL_PILAR_CABRED 3
+
+char nombres_estaciones_linea_san_martin_ramal_pilar_cabred[CANT_ESTACIONES_LINEA_SAN_MARTIN_RAMAL_PILAR_CABRED][LENGTH_NOMBRE_ESTACION] = {
+	"Pilar",
+	"Manzanares",
+	"Cabred"};
+
+// Estaciones Linea Belgrano Sur/Ramal Buenos Aires - M.C.G. Belgrano
+#define CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_M_C_G_BELGRANO 16
+
+char nombres_estaciones_linea_belgrano_sur_ramal_buenos_aires_m_c_g_belgrano[CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_M_C_G_BELGRANO][LENGTH_NOMBRE_ESTACION] = {
+	"Dr Sáenz",
+	"Villa Soldati",
+	"Presidente Illia",
+	"Villa Lugano",
+	"Villa Madero",
+	"Marinos del Fournier",
+	"Tapiales",
+	"Aldo Bonzi",
+	"Sanchez de Mendeville",
+	"José Ingenieros",
+	"Justo Villegas",
+	"Isidro Casanova",
+	"Rafael Castillo",
+	"Merlo Gomez",
+	"Libertad",
+	"Marinos C. G Belgrano"};
+
+// Estaciones Linea Belgrano Sur/Ramal Buenos Aires - Gonzalez Catán
+#define CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_GONZALEZ_CATAN 13
+
+char nombres_estaciones_linea_belgrano_sur_ramal_buenos_aires_gonzalez_catan[CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_GONZALEZ_CATAN][LENGTH_NOMBRE_ESTACION] = {
+	"Dr Sáenz",
+	"Villa Soldati",
+	"Presidente Illia",
+	"Villa Lugano",
+	"Villa Madero",
+	"Marinos del Fournier",
+	"Tapiales",
+	"Ingeniero Castello",
+	"Querandí",
+	"Laferrere",
+	"María Eva Duarte",
+	"Independencia",
+	"González Catán"};
+
+// Estaciones Linea Belgrano Sur/Ramal Apeadero Km 12 - Libertad
+#define CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_APEADERO_KM_12_LIBERTAD 9
+
+char nombres_estaciones_linea_belgrano_sur_ramal_apeadero_km_12_libertad[CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_APEADERO_KM_12_LIBERTAD][LENGTH_NOMBRE_ESTACION] = {
+	"Apeadero Km 12",
+	"Aldo Bonzi",
+	"Sanchez de Mendeville",
+	"José Ingenieros",
+	"Justo Villegas",
+	"Isidro Casanova",
+	"Rafael Castillo",
+	"Merlo Gomez",
+	"Libertad"};
+
+// Estaciones Linea Tren de La Costa/Ramal Maipú - Delta
+#define CANT_ESTACIONES_LINEA_TREN_DE_LA_COSTA_RAMAL_MAIPU_DELTA 11
+
+char nombres_estaciones_linea_tren_de_la_costa_ramal_maipu_delta[CANT_ESTACIONES_LINEA_TREN_DE_LA_COSTA_RAMAL_MAIPU_DELTA][LENGTH_NOMBRE_ESTACION] = {
+	"Maipú",
+	"Borges",
+	"Libertador",
+	"Juan Anchorena",
+	"Las Barrancas",
+	"San Isidro R",
+	"Punta Chica",
+	"Marina Nueva",
+	"San Fernando R",
+	"Canal San Fernando",
+	"Delta"};
+
+int cant_estaciones_linea_sarmiento[CANT_RAMALES_LINEA_SARMIENTO] = {
+	CANT_ESTACIONES_LINEA_SARMIENTO_RAMAL_ONCE_MORENO};
+
+int cant_estaciones_linea_mitre[CANT_RAMALES_LINEA_MITRE] = {
+	CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_TIGRE,
+	CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_MITRE,
+	CANT_ESTACIONES_LINEA_MITRE_RAMAL_RETIRO_J_L_SUAREZ};
+
+int cant_estaciones_linea_roca[CANT_RAMALES_LINEA_ROCA] = {
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_LA_PLATA,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_Q,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_T,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_ALEJANDRO_KORN,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_EZEIZA,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_EZEIZA_CANUELAS,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_LA_PLATA_POLICLINICO,
+	CANT_ESTACIONES_LINEA_ROCA_RAMAL_CONSTITUCION_CANUELAS};
+
+int cant_estaciones_linea_san_martin[CANT_RAMALES_LINEA_SAN_MARTIN] = {
+	CANT_ESTACIONES_LINEA_SAN_MARTIN_RAMAL_RETIRO_PILAR,
+	CANT_ESTACIONES_LINEA_SAN_MARTIN_RAMAL_PILAR_CABRED};
+
+int cant_estaciones_linea_belgrano_sur[CANT_RAMALES_LINEA_BELGRANO_SUR] = {
+	CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_M_C_G_BELGRANO,
+	CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_GONZALEZ_CATAN,
+	CANT_ESTACIONES_LINEA_BELGRANO_SUR_RAMAL_APEADERO_KM_12_LIBERTAD};
+
+int cant_estaciones_linea_tren_de_la_costa[CANT_RAMALES_LINEA_TREN_DE_LA_COSTA] = {
+	CANT_ESTACIONES_LINEA_TREN_DE_LA_COSTA_RAMAL_MAIPU_DELTA};
+
+int *cant_estaciones[CANT_LINEAS] = {
+	cant_estaciones_linea_sarmiento,
+	cant_estaciones_linea_mitre,
+	cant_estaciones_linea_roca,
+	cant_estaciones_linea_san_martin,
+	cant_estaciones_linea_belgrano_sur,
+	cant_estaciones_linea_tren_de_la_costa};
+
+char *getNombreEstacion(int lineaID, int ramalID, int estacionID)
+{
+	switch (lineaID)
+	{
+	case LINEA_SARMIENTO:
+		switch (ramalID)
+		{
+		case LINEA_SARMIENTO_RAMAL_ONCE_MORENO:
+			return nombres_estaciones_linea_sarmiento_ramal_once_moreno[estacionID];
+		}
+	case LINEA_MITRE:
+		switch (ramalID)
+		{
+		case LINEA_MITRE_RAMAL_RETIRO_TIGRE:
+			return nombres_estaciones_linea_mitre_ramal_retiro_tigre[estacionID];
+		case LINEA_MITRE_RAMAL_RETIRO_MITRE:
+			return nombres_estaciones_linea_mitre_ramal_retiro_mitre[estacionID];
+		case LINEA_MITRE_RAMAL_RETIRO_J_L_SUAREZ:
+			return nombres_estaciones_linea_mitre_ramal_retiro_j_l_suarez[estacionID];
+		}
+	case LINEA_ROCA:
+		switch (ramalID)
+		{
+		case LINEA_ROCA_RAMAL_CONSTITUCION_LA_PLATA:
+			return nombres_estaciones_linea_roca_ramal_constitucion_la_plata[estacionID];
+		case LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_Q:
+			return nombres_estaciones_linea_roca_ramal_constitucion_bosques_q[estacionID];
+		case LINEA_ROCA_RAMAL_CONSTITUCION_BOSQUES_T:
+			return nombres_estaciones_linea_roca_ramal_constitucion_bosques_t[estacionID];
+		case LINEA_ROCA_RAMAL_CONSTITUCION_ALEJANDRO_KORN:
+			return nombres_estaciones_linea_roca_ramal_constitucion_alejandro_korn[estacionID];
+		case LINEA_ROCA_RAMAL_CONSTITUCION_EZEIZA:
+			return nombres_estaciones_linea_roca_ramal_constitucion_ezeiza[estacionID];
+		case LINEA_ROCA_RAMAL_EZEIZA_CANUELAS:
+			return nombres_estaciones_linea_roca_ramal_ezeiza_canuelas[estacionID];
+		case LINEA_ROCA_RAMAL_LA_PLATA_POLICLINICO:
+			return nombres_estaciones_linea_roca_ramal_la_plata_policlinico[estacionID];
+		case LINEA_ROCA_RAMAL_CONSTITUCION_CANUELAS:
+			return nombres_estaciones_linea_roca_ramal_constitucion_canuelas[estacionID];
+		}
+	case LINEA_SAN_MARTIN:
+		switch (ramalID)
+		{
+		case LINEA_SAN_MARTIN_RAMAL_RETIRO_PILAR:
+			return nombres_estaciones_linea_san_martin_ramal_retiro_pilar[estacionID];
+		case LINEA_SAN_MARTIN_RAMAL_PILAR_CABRED:
+			return nombres_estaciones_linea_san_martin_ramal_pilar_cabred[estacionID];
+		}
+	case LINEA_BELGRANO_SUR:
+		switch (ramalID)
+		{
+		case LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_M_C_G_BELGRANO:
+			return nombres_estaciones_linea_belgrano_sur_ramal_buenos_aires_m_c_g_belgrano[estacionID];
+		case LINEA_BELGRANO_SUR_RAMAL_BUENOS_AIRES_GONZALEZ_CATAN:
+			return nombres_estaciones_linea_belgrano_sur_ramal_buenos_aires_gonzalez_catan[estacionID];
+		case LINEA_BELGRANO_SUR_RAMAL_APEADERO_KM_12_LIBERTAD:
+			return nombres_estaciones_linea_belgrano_sur_ramal_apeadero_km_12_libertad[estacionID];
+		}
+	case LINEA_TREN_DE_LA_COSTA:
+		switch (ramalID)
+		{
+		case LINEA_TREN_DE_LA_COSTA_RAMAL_MAIPU_DELTA:
+			return nombres_estaciones_linea_tren_de_la_costa_ramal_maipu_delta[estacionID];
+		}
+	}
+
+	return NULL;
+}
