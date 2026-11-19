@@ -33,12 +33,16 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite",
+            "emery",
+            "flint",
+            "gabbro"
         ],
         "uuid": "b28ccb8a-f688-4818-be2a-8d4254133842",
         "watchapp": {
             "watchface": false
         }
     },
-    "version": "1.0.0"
+    "version": "1.0.2"
 }

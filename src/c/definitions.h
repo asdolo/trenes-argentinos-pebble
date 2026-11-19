@@ -552,6 +552,7 @@ char *getNombreEstacion(int lineaID, int ramalID, int estacionID)
 		case LINEA_SARMIENTO_RAMAL_ONCE_MORENO:
 			return nombres_estaciones_linea_sarmiento_ramal_once_moreno[estacionID];
 		}
+		break;
 	case LINEA_MITRE:
 		switch (ramalID)
 		{
@@ -562,6 +563,7 @@ char *getNombreEstacion(int lineaID, int ramalID, int estacionID)
 		case LINEA_MITRE_RAMAL_RETIRO_J_L_SUAREZ:
 			return nombres_estaciones_linea_mitre_ramal_retiro_j_l_suarez[estacionID];
 		}
+		break;
 	case LINEA_ROCA:
 		switch (ramalID)
 		{
@@ -582,6 +584,7 @@ char *getNombreEstacion(int lineaID, int ramalID, int estacionID)
 		case LINEA_ROCA_RAMAL_CONSTITUCION_CANUELAS:
 			return nombres_estaciones_linea_roca_ramal_constitucion_canuelas[estacionID];
 		}
+		break;
 	case LINEA_SAN_MARTIN:
 		switch (ramalID)
 		{
@@ -590,6 +593,7 @@ char *getNombreEstacion(int lineaID, int ramalID, int estacionID)
 		case LINEA_SAN_MARTIN_RAMAL_PILAR_CABRED:
 			return nombres_estaciones_linea_san_martin_ramal_pilar_cabred[estacionID];
 		}
+		break;
 	case LINEA_BELGRANO_SUR:
 		switch (ramalID)
 		{
@@ -600,12 +604,14 @@ char *getNombreEstacion(int lineaID, int ramalID, int estacionID)
 		case LINEA_BELGRANO_SUR_RAMAL_APEADERO_KM_12_LIBERTAD:
 			return nombres_estaciones_linea_belgrano_sur_ramal_apeadero_km_12_libertad[estacionID];
 		}
+		break;
 	case LINEA_TREN_DE_LA_COSTA:
 		switch (ramalID)
 		{
 		case LINEA_TREN_DE_LA_COSTA_RAMAL_MAIPU_DELTA:
 			return nombres_estaciones_linea_tren_de_la_costa_ramal_maipu_delta[estacionID];
 		}
+		break;
 	}
 
 	return NULL;

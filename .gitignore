@@ -1,5 +1,6 @@
 build/
 .lock-waf_linux2_build
+.pebble-venv/
 .vscode/settings.json
 .vscode/c_cpp_properties.json
 .vscode/settings.json

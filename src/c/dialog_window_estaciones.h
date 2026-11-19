@@ -34,7 +34,11 @@ void estaciones_window_load(Window *window)
 {
 	Layer *window_layer = window_get_root_layer(estaciones_window);
 
-	menu_layer_estaciones = menu_layer_create(GRect(0, PBL_IF_ROUND_ELSE(0, 14), PBL_IF_ROUND_ELSE(180, 144), PBL_IF_ROUND_ELSE(180 - 16, 168 - 16)));
+	menu_layer_estaciones = menu_layer_create(GRect(
+		0,
+		PBL_IF_ROUND_ELSE(0, STATUS_BAR_LAYER_HEIGHT),
+		PBL_DISPLAY_WIDTH,
+		PBL_IF_ROUND_ELSE(PBL_DISPLAY_HEIGHT, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT)));
 
 	menu_layer_set_click_config_onto_window(menu_layer_estaciones, estaciones_window);
 
